@@ -116,9 +116,20 @@ export const AudioGrid = (props) => {
       // let file = new File([chunks], "abc.blob");
       // console.log("file", file);
 
-      await dispatch(uploadFileRequest(blob));
+      //await dispatch(uploadFileRequest(blob));
 
       audioURL = window.URL.createObjectURL(blob);
+
+      console.log('zzzzzzzzzz trying to download audio file locally')
+      const downloadElement = document.getElementById('audioDownload')
+      const anchorRef = document.createElement('a')
+      anchorRef.id = 'audioURL'
+      anchorRef.download = "audioTest.mp3"
+      anchorRef.href = audioURL
+      anchorRef.dataset.downloadurl = ["audio/ogg",anchorRef.download,anchorRef.href].join(':')
+      downloadElement.appendChild(anchorRef)
+      anchorRef.click()
+
       audio.src = audioURL;
 
       // audio.play();
