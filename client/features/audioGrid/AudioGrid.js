@@ -1,9 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Grid } from "@mui/material";
 import { Container } from "@mui/material";
+import { Readable } from "stream";
 
 import { useDispatch, useSelector } from "react-redux";
 import {
+  uploadFileRequest,
   fetchSongSectionsAsync,
   createSectionAsync,
   deleteSectionAsync,
@@ -15,10 +17,22 @@ import {
 import Audio from "../audio/Audio";
 import TrackHeader from "../trackHeader/TrackHeader";
 import AddNewPlayer from "../addNewPlayer/AddNewPlayer";
+import { Record } from "../addNewPlayer/AddNewPlayer";
 
 function createAudioElement() {
   return document.createElement("audio");
 }
+
+let stream;
+let recorder;
+let blob;
+let audioURL;
+const audio = document.createElement("audio");
+audio.controls = true;
+
+const p_and_j_audio = document.createElement("audio");
+p_and_j_audio.src = "02 - Pride and Joy.mp3";
+p_and_j_audio.load();
 
 export const AudioGrid = (props) => {
   // songId will be a prop
@@ -59,6 +73,90 @@ export const AudioGrid = (props) => {
     if (sectionId) await dispatch(deleteSectionAsync(sectionId));
     dispatch(deleteSection(inMemoryId));
   }
+
+  const [recording, setRecording] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const chunks = [];
+  async function allowMicophone() {
+    console.log("hello");
+  }
+
+  async function record() {
+    console.log(stream);
+    console.log(recorder);
+    if (!stream) {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recorder = new MediaRecorder(stream);
+    }
+    if (recorder.state === "inactive") {
+      console.log("recorder.state: ", recorder.state);
+      console.log("starting....");
+      p_and_j_audio.play();
+      recorder.start();
+      setRecording(true);
+    } else if (recorder.state === "recording") {
+      console.log("stopping...");
+      recorder.stop();
+      setRecording(false);
+      p_and_j_audio.pause();
+    }
+
+    recorder.onstop = async (e) => {
+      console.log("data available after MediaRecorder.stop() called.");
+
+      const audio = document.createElement("audio");
+      console.log("chunks", chunks);
+
+      // const blob = new Blob(chunks, {
+      //   type: "audio/mp3",
+      //   // type: "audio/mpeg-3";
+      // });
+
+      blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+      // let file = new File([chunks], "abc.blob");
+      // console.log("file", file);
+
+      await dispatch(uploadFileRequest(blob));
+
+      audioURL = window.URL.createObjectURL(blob);
+      audio.src = audioURL;
+
+      // audio.play();
+      // audio.play();
+      // audio.load();
+      console.log("recorder stopped");
+      console.log("audio.src", audio.src);
+      console.log("audioURL", audioURL);
+    };
+
+    recorder.ondataavailable = (e) => {
+      chunks.push(e.data);
+    };
+  }
+
+  async function playPause() {
+    console.log("audioURL", audioURL);
+    if (audioURL) audio.src = audioURL;
+    console.log("paused? ", audio.paused);
+    p_and_j_audio.load();
+    console.log("audio.src", `itshere{${audio.src}}<--`);
+    console.log("audioURL", audioURL);
+    if (!audio.src) return;
+
+    console.log("audio.paused", audio.paused);
+    if (playing) {
+      audio.pause();
+      setPlaying(false);
+      console.log("playing.....");
+      p_and_j_audio.pause();
+    } else {
+      await audio.play();
+      setPlaying(true);
+      p_and_j_audio.load();
+      p_and_j_audio.play();
+    }
+  }
+
   return (
     <Container>
       <Grid container columns={1} rowSpacing={2}>
@@ -80,6 +178,14 @@ export const AudioGrid = (props) => {
             ))}
             <Grid item sm={2} md={1}>
               <AddNewPlayer addNewPlayer={addNewPlayer} />
+            </Grid>
+            <Grid item sm={2} md={1}>
+              <Record
+                record={record}
+                recording={recording}
+                playing={playing}
+                playPause={playPause}
+              />
             </Grid>
           </Grid>
         </Grid>

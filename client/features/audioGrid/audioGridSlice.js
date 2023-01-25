@@ -13,10 +13,40 @@ export const fetchSongSectionsAsync = createAsyncThunk(
   }
 );
 
+export const uploadFileRequest = createAsyncThunk("upload", async (file) => {
+  const blob = new Blob(["This is some important text"], {
+    type: "text/plain",
+  });
+
+  console.log("I AM HERE");
+  console.log("I AM HERE");
+  console.log("I AM HERE");
+  // console.log("blob name", blob.name);
+  // console.log("file", file);
+
+  const data = new FormData();
+  data.append("audio-file", file);
+
+  // data.append("file", file, file.name);
+  // console.log("try send this ");
+  // for (var [key, value] of data.entries()) {
+  //   console.log(key, value);
+  // }
+  // console.log("file", file);
+
+  const response = await axios.post("api/sections", data, {
+    headers: {
+      "Content-Type": `multipart/form-data; boundary=${data._boundary}`,
+    },
+  });
+});
+
 export const createSectionAsync = createAsyncThunk(
   "createSection",
   async (payload) => {
     try {
+      console.log("payload:::");
+      console.log(payload);
       const { data } = await axios.post("api/sections", payload);
       return data;
     } catch (error) {

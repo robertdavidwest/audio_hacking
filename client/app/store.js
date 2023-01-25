@@ -5,7 +5,7 @@ import audioGridReducer from "../features/audioGrid/audioGridSlice";
 
 const store = configureStore({
   reducer: { auth: authReducer, audioGrid: audioGridReducer },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
+  // middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
 });
 
 export default store;
