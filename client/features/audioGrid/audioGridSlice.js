@@ -24,8 +24,9 @@ export const uploadFileRequest = createAsyncThunk("upload", async (file) => {
   // console.log("blob name", blob.name);
   // console.log("file", file);
 
+  //file is actually the new Blob of the recorded audio
   const data = new FormData();
-  data.append("audio-file", file);
+  data.append("audiofile", file);
 
   // data.append("file", file, file.name);
   // console.log("try send this ");
@@ -36,7 +37,7 @@ export const uploadFileRequest = createAsyncThunk("upload", async (file) => {
 
   const response = await axios.post("api/sections", data, {
     headers: {
-      "Content-Type": `multipart/form-data; boundary=${data._boundary}`,
+      "Content-Type": `multipart/form-data` //; boundary=${data._boundary}`,
     },
   });
 });

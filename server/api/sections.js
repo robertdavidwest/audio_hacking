@@ -4,25 +4,44 @@ const { Readable } = require("stream");
 const audioEncoder = require("audio-encoder");
 const fileSaver = require("file-saver");
 const fs = require("fs");
+const multer  = require('multer');
+const upload = multer();
+
 const {
   models: { Section },
 } = require("../db");
 module.exports = router;
 
-router.post("/", express.raw({ type: "*/*" }), async (req, res, next) => {
+//router.post("/", express.raw({ type: "*/*" }), async (req, res, next) => {
+router.post("/", upload.single('audiofile'), async (req, res, next) => {
+//router.post("/", async (req, res, next) => {
   try {
     console.log("######");
     console.log("######");
-    console.log(req.body);
+    //console.log(req);
     console.log("######");
     console.log("######");
+
+    const {buffer: audiofile } = req.file
+
+    console.log('zzzzzzzzzzzz')
+    console.log(audiofile)
+
+    fs.open('audioText.mp3','w+', (err,fd)=>{
+      fs.writeFile(fd,audiofile,(err)=>{
+        fs.close(fd, (err)=>{
+          res.status(201).send('audioText.mp3')
+        })
+      })
+    })
 
     // const fileStream = fs.createWriteStream("test");
     // fileStream.write(Buffer.from(new Uint8Array(req.body)));
 
-    const b = Buffer.from(req.body);
-    const abc = b.toString();
-    console.log("abc", abc);
+    //const b = Buffer.from(req.body);
+    //const abc = b.toString();
+
+    //console.log("abc", abc);
     // audio-file
     // console.log("@@@yyjj");
     // console.log(b.length);

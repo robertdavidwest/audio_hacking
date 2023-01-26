@@ -46,7 +46,7 @@ export const AudioGrid = (props) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      await dispatch(fetchSongSectionsAsync(songId));
+      dispatch(fetchSongSectionsAsync(songId));
     };
     fetchData();
   }, [dispatch]);
@@ -61,7 +61,7 @@ export const AudioGrid = (props) => {
       playbackRate: 1.0,
       loop: false,
     };
-    await dispatch(createSectionAsync(payload));
+    dispatch(createSectionAsync(payload));
     payload["inMemoryId"] = sections.length;
     console.log(payload.inMemoryId);
     dispatch(createSection(payload));
@@ -70,16 +70,17 @@ export const AudioGrid = (props) => {
   async function deletePlayer(sectionId, inMemoryId) {
     sectionId = Number(sectionId);
     inMemoryId = Number(inMemoryId);
-    if (sectionId) await dispatch(deleteSectionAsync(sectionId));
+    if (sectionId) dispatch(deleteSectionAsync(sectionId));
     dispatch(deleteSection(inMemoryId));
   }
 
   const [recording, setRecording] = useState(false);
   const [playing, setPlaying] = useState(false);
   const chunks = [];
-  async function allowMicophone() {
+
+/*   async function allowMicrophone() {
     console.log("hello");
-  }
+  } */
 
   async function record() {
     console.log(stream);
@@ -91,7 +92,7 @@ export const AudioGrid = (props) => {
     if (recorder.state === "inactive") {
       console.log("recorder.state: ", recorder.state);
       console.log("starting....");
-      p_and_j_audio.play();
+      //p_and_j_audio.play();
       recorder.start();
       setRecording(true);
     } else if (recorder.state === "recording") {
@@ -99,6 +100,12 @@ export const AudioGrid = (props) => {
       recorder.stop();
       setRecording(false);
       p_and_j_audio.pause();
+      p_and_j_audio.currentTime=0
+    }
+
+    recorder.onstart = () => {
+      p_and_j_audio.currentTime=0
+      p_and_j_audio.play();
     }
 
     recorder.onstop = async (e) => {
@@ -112,11 +119,15 @@ export const AudioGrid = (props) => {
       //   // type: "audio/mpeg-3";
       // });
 
-      blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+      const MIME_TYPE = "audio/mpeg"
+      //blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+
+      blob = new Blob(chunks, { type: MIME_TYPE });
+
       // let file = new File([chunks], "abc.blob");
       // console.log("file", file);
 
-      //await dispatch(uploadFileRequest(blob));
+      dispatch(uploadFileRequest(blob));
 
       audioURL = window.URL.createObjectURL(blob);
 
@@ -126,18 +137,24 @@ export const AudioGrid = (props) => {
       anchorRef.id = 'audioURL'
       anchorRef.download = "audioTest.mp3"
       anchorRef.href = audioURL
-      anchorRef.dataset.downloadurl = ["audio/ogg",anchorRef.download,anchorRef.href].join(':')
+      anchorRef.dataset.downloadurl = [MIME_TYPE,anchorRef.download,anchorRef.href].join(':')
       downloadElement.appendChild(anchorRef)
       anchorRef.click()
 
       audio.src = audioURL;
 
-      // audio.play();
+      audio.currentTime=0
+      audio.play();
+      p_and_j_audio.currentTime=0
+      p_and_j_audio.play();
+
       // audio.play();
       // audio.load();
+
       console.log("recorder stopped");
       console.log("audio.src", audio.src);
       console.log("audioURL", audioURL);
+
     };
 
     recorder.ondataavailable = (e) => {
